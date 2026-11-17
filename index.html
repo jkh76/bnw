@@ -61,20 +61,20 @@
   .tile.back{font-size:18px;opacity:.95}
   .tile.back.B{color:#5c5c5c}.tile.back.W{color:#b9b9b9}
   .tile.sm{width:22px;height:30px;border-radius:5px;font-size:12px;border-width:1.5px}
-  .tile.lg{width:76px;height:100px;border-radius:14px;font-size:42px;border-width:3px}
+  .tile.lg{width:58px;height:76px;border-radius:12px;font-size:34px;border-width:3px}
   .tile.empty{background:transparent;border:2px dashed #c4bfb4;color:#b3ada1}
   .tile.pop{animation:pop .45s ease}
   @keyframes pop{0%{transform:rotateY(90deg) scale(.8)}100%{transform:none}}
   .tile.win{box-shadow:0 0 0 4px var(--accent)}
 
-  .table{position:relative;margin:10px 0;padding:14px 10px;border-radius:18px;
+  .table{position:relative;margin:8px 0;padding:10px 12px;border-radius:18px;
     background:radial-gradient(ellipse at center,#e3dfd5 0%,#d8d3c7 100%);border:1px solid #cbc5b8;
-    display:flex;flex-direction:column;align-items:center;gap:10px}
-  .slotrow{display:flex;align-items:center;gap:10px}
-  .slotlbl{font-size:12px;color:var(--muted);width:64px;text-align:center;white-space:nowrap}
-  .status{font-size:15px;font-weight:600;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;padding:0 6px;line-height:1.35}
+    display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}
+  .slotrow{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .slotlbl{font-size:12px;color:var(--muted);max-width:72px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .status{flex:1;font-size:14.5px;font-weight:600;text-align:center;min-height:76px;display:flex;align-items:center;justify-content:center;padding:18px 2px 0;line-height:1.35;word-break:keep-all}
   .status .hl{color:var(--accent)}
-  .banner{position:absolute;right:10px;top:10px;font-size:13px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--ink);color:#fff}
+  .banner{position:absolute;left:50%;transform:translateX(-50%);top:8px;white-space:nowrap;font-size:13px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--ink);color:#fff}
   .banner.win{background:var(--accent)}
   .banner.tie{background:#8a857c}
 
@@ -190,7 +190,7 @@
     <div class="strip" id="strip"></div>
     <details class="memo" id="memoBox" open><summary>추리 메모</summary><div id="memo"></div></details>
   </section>
-  <footer class="ver" id="verLbl">v1.0 · 2026-11-17</footer>
+  <footer class="ver" id="verLbl">v0.7 · 2026-11-17</footer>
 </div>
 
 <!-- overlays -->
