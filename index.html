@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>흑과 백</title>
+<style>
+  :root{
+    --bg:#efede7; --card:#fbfaf7; --ink:#151515; --muted:#6f6c66; --line:#d9d5cc;
+    --blk:#141414; --wht:#fcfcfa; --accent:#c8372d; --accent-soft:rgba(200,55,45,.12);
+    --good:#2f7d4f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent}
+  button{font:inherit;color:inherit;cursor:pointer}
+  #app{max-width:480px;margin:0 auto;padding:12px 14px 40px;min-height:100vh}
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  header h1{font-size:22px;margin:0;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+  .logo{display:inline-flex;width:26px;height:26px;border-radius:50%;overflow:hidden;border:2px solid var(--ink)}
+  .logo i{flex:1}.logo i:first-child{background:var(--blk)}.logo i:last-child{background:var(--wht)}
+  .hbtns{display:flex;gap:6px}
+  .ghost{background:transparent;border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px}
+  .ghost:active{background:#e6e3dc}
+  [hidden]{display:none!important}
+
+  /* menu */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+  .card h2{font-size:15px;margin:0 0 10px;color:var(--muted);font-weight:600}
+  .seg{display:grid;gap:8px}
+  .seg.two{grid-template-columns:1fr 1fr}
+  .opt{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px;text-align:left}
+  .opt b{display:block;font-size:15px}
+  .opt span{font-size:12.5px;color:var(--muted)}
+  .opt.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+  .check{display:flex;align-items:center;gap:10px;font-size:14px}
+  .check input{width:20px;height:20px;accent-color:var(--ink)}
+  .primary{width:100%;background:var(--ink);color:#fff;border:0;border-radius:14px;padding:15px;font-size:17px;font-weight:700}
+  .primary:active{transform:scale(.99)}
+  .primary:disabled{opacity:.35}
+
+  /* game */
+  .topbar{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin-bottom:8px}
+  .round{font-weight:700}
+  .score{font-variant-numeric:tabular-nums;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+  .score b{font-size:16px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+  .phead{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:6px}
+  .badge{font-size:11px;font-weight:700;background:var(--ink);color:#fff;border-radius:6px;padding:2px 6px}
+  .pinfo{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:26px}
+  .muted{color:var(--muted);font-size:13px}
+  .lights{display:flex;gap:5px}
+  .lights i{width:14px;height:14px;border-radius:50%;background:#d8d4cb;border:1px solid #c6c1b6}
+  .lights i.on{background:#f0b429;border-color:#c98f0b;box-shadow:0 0 6px rgba(240,180,41,.7)}
+
+  .tile{width:44px;height:58px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;user-select:none;flex:none}
+  .tile.B{background:var(--blk);color:#f4f4f2;border:2px solid var(--blk)}
+  .tile.W{background:var(--wht);color:var(--blk);border:2px solid var(--blk)}
+  .tile.back{font-size:18px;opacity:.95}
+  .tile.back.B{color:#5c5c5c}.tile.back.W{color:#b9b9b9}
+  .tile.sm{width:22px;height:30px;border-radius:5px;font-size:12px;border-width:1.5px}
+  .tile.lg{width:76px;height:100px;border-radius:14px;font-size:42px;border-width:3px}
+  .tile.empty{background:transparent;border:2px dashed #c4bfb4;color:#b3ada1}
+  .tile.pop{animation:pop .45s ease}
+  @keyframes pop{0%{transform:rotateY(90deg) scale(.8)}100%{transform:none}}
+  .tile.win{box-shadow:0 0 0 4px var(--accent)}
+
+  .table{position:relative;margin:10px 0;padding:14px 10px;border-radius:18px;
+    background:radial-gradient(ellipse at center,#e3dfd5 0%,#d8d3c7 100%);border:1px solid #cbc5b8;
+    display:flex;flex-direction:column;align-items:center;gap:10px}
+  .slotrow{display:flex;align-items:center;gap:10px}
+  .slotlbl{font-size:12px;color:var(--muted);width:64px;text-align:center;white-space:nowrap}
+  .status{font-size:15px;font-weight:600;text-align:center;min-height:44px;display:flex;align-items:center;justify-content:center;padding:0 6px;line-height:1.35}
+  .status .hl{color:var(--accent)}
+  .banner{position:absolute;right:10px;top:10px;font-size:13px;font-weight:800;padding:4px 10px;border-radius:999px;background:var(--ink);color:#fff}
+  .banner.win{background:var(--accent)}
+  .banner.tie{background:#8a857c}
+
+  .strip{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin:10px 0}
+  .cell{height:44px;border-radius:8px;border:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10.5px;color:var(--muted)}
+  .cell .dots{display:flex;gap:2px;margin-bottom:2px}
+  .cell .dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--blk)}
+  .cell .dots i.B{background:var(--blk)}.cell .dots i.W{background:var(--wht)}
+  .cell.w{border-color:var(--accent);color:var(--accent);font-weight:800;background:var(--accent-soft)}
+  .cell.l{color:var(--ink);font-weight:700}
+  .cell.now{border:1.5px dashed var(--ink)}
+
+  .hand{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;margin:8px 0}
+  .hand button{padding:0;border:0;background:none;display:flex;justify-content:center}
+  .hand .tile{width:100%;max-width:46px;height:60px}
+    .hand button.sel .tile{transform:translateY(-8px);box-shadow:0 0 0 3px var(--accent)}
+  .hand.locked button .tile{opacity:.6}
+  .hand button.gone .tile{opacity:.13}
+  .bet{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0}
+  .bet button{width:46px;height:42px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:700}
+  .betnum{width:86px;height:64px;font-size:34px}
+  .bet2{display:flex;gap:6px;justify-content:center;margin-bottom:6px}
+  .bet2 button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px}
+  input[type=range]{width:100%;accent-color:var(--ink)}
+  .hint{text-align:center;font-size:13px;color:var(--muted);margin:2px 0 8px}
+  .act{margin-top:6px}
+
+  details.memo{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-top:10px}
+  details.memo summary{font-weight:700;cursor:pointer}
+  .mt{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;font-variant-numeric:tabular-nums}
+  .mt th,.mt td{padding:5px 4px;border-bottom:1px solid #ebe8e1;text-align:center}
+  .mt th{color:var(--muted);font-weight:600;font-size:12px}
+  .poss{letter-spacing:1px;font-weight:700}
+  .grid9{display:grid;grid-template-columns:repeat(9,1fr);gap:4px;margin-top:8px}
+  .g{position:relative;display:flex;justify-content:center}
+  .g .tile{width:100%;max-width:34px;height:42px;font-size:17px}
+  .g.used .tile{opacity:.18}
+  .g.left .tile{box-shadow:0 0 0 2.5px var(--good)}
+  .legend{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+  /* overlays */
+  .ov{position:fixed;inset:0;background:rgba(20,20,20,.72);display:flex;align-items:center;justify-content:center;padding:18px;z-index:10}
+  .ovc{background:var(--card);border-radius:20px;padding:22px 18px;max-width:440px;width:100%;max-height:88vh;overflow:auto}
+  .ovc h2{margin:0 0 8px;font-size:22px}
+  .ovc p{margin:6px 0;line-height:1.55;font-size:14.5px}
+  .ovc h3{font-size:15px;margin:16px 0 4px}
+  .ovc ol{padding-left:20px;margin:4px 0;font-size:14px;line-height:1.6}
+  .pass{background:var(--ink);color:#fff;text-align:center}
+  .pass .big{font-size:28px;font-weight:800;margin:8px 0 6px}
+  .pass button{margin-top:18px;background:#fff;color:var(--ink)}
+  .final h2{text-align:center;font-size:28px}
+  .final .sc{text-align:center;font-size:18px;font-weight:700;margin-bottom:10px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+  .row2 .ghost{padding:13px;font-size:15px;border-radius:14px;background:#fff}
+  .ver{text-align:center;font-size:11.5px;color:var(--muted);margin-top:24px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1><span class="logo"><i></i><i></i></span>흑과 백</h1>
+    <div class="hbtns">
+      <button class="ghost" id="btnRules">규칙</button>
+      <button class="ghost" id="btnSound" aria-label="효과음 켜고 끄기">소리 켬</button>
+      <button class="ghost" id="btnMenu" hidden>메뉴</button>
+    </div>
+  </header>
+
+  <!-- MENU -->
+  <section id="menu">
+    <div class="card">
+      <h2>게임 버전</h2>
+      <div class="seg" data-group="ver">
+        <button class="opt" data-v="A"><b>흑과 백</b><span>0~8 숫자 타일을 한 장씩. 짝수는 흑, 홀수는 백</span></button>
+        <button class="opt" data-v="B"><b>흑과 백 2</b><span>99포인트를 나눠 건다. 한 자리 수는 흑, 두 자리 수는 백</span></button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>상대</h2>
+      <div class="seg two" data-group="opp">
+        <button class="opt" data-v="easy"><b>AI 쉬움</b><span>아무거나 낸다</span></button>
+        <button class="opt" data-v="normal"><b>AI 보통</b><span>색을 보고 계산한다</span></button>
+        <button class="opt" data-v="hard"><b>AI 어려움</b><span>추리하고 수읽기한다</span></button>
+        <button class="opt" data-v="hot"><b>친구와 한 기기</b><span>번갈아 화면을 넘긴다</span></button>
+      </div>
+    </div>
+    <div class="card">
+      <label class="check"><input type="checkbox" id="optMemo"> 추리 메모 켜기 <span class="muted">(끄면 머리로만 추리)</span></label>
+    </div>
+    <button class="primary" id="btnStart">시작</button>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" hidden>
+    <div class="topbar">
+      <span class="round" id="roundLbl"></span>
+      <span class="score" id="scoreLbl"></span>
+    </div>
+    <div class="panel">
+      <div class="phead"><span id="oppName"></span><span class="badge" id="oppFirst" hidden>선</span></div>
+      <div class="pinfo" id="oppInfo"></div>
+    </div>
+    <div class="table">
+      <div class="banner" id="banner" hidden></div>
+      <div class="slotrow"><span class="slotlbl" id="oppSlotLbl"></span><div id="slotOpp"></div></div>
+      <div class="status" id="status"></div>
+      <div class="slotrow"><span class="slotlbl" id="meSlotLbl"></span><div id="slotMe"></div></div>
+    </div>
+    <div class="panel">
+      <div class="phead"><span id="meName"></span><span class="badge" id="meFirst" hidden>선</span><span class="muted" id="meExtra" style="margin-left:auto;font-weight:600"></span></div>
+      <div id="controls"></div>
+    </div>
+    <div class="strip" id="strip"></div>
+    <details class="memo" id="memoBox" open><summary>추리 메모</summary><div id="memo"></div></details>
+  </section>
+  <footer class="ver" id="verLbl">v1.0 · 2026-11-17</footer>
+</div>
+
+<!-- overlays -->
+<div class="ov" id="passOv" hidden><div class="ovc pass">
+  <div class="muted" style="color:#bbb">상대가 화면을 보지 않게 넘겨주세요</div>
+  <div class="big" id="passName"></div>
+  <div id="passInfo" style="color:#ddd;font-size:15px"></div>
+  <button class="primary" id="passGo">준비됐어요</button>
+</div></div>
+
+<div class="ov" id="finalOv" hidden><div class="ovc final">
+  <h2 id="finalTitle"></h2>
+  <div class="sc" id="finalScore"></div>
+  <p class="muted" style="text-align:center">이제야 공개되는 양쪽의 숫자</p>
+  <table class="mt" id="finalTable"></table>
+  <div class="row2"><button class="ghost" id="finalMenu">메뉴로</button><button class="primary" id="finalAgain">한 판 더</button></div>
+</div></div>
+
+<div class="ov" id="rulesOv" hidden><div class="ovc">
+  <h2>규칙</h2>
+  <p>더 지니어스의 데스매치 게임입니다. 상대가 낸 숫자는 끝날 때까지 공개되지 않고, <b>색과 승패만</b> 보입니다.</p>
+  <h3>흑과 백</h3>
+  <ol>
+    <li>각자 0~8 타일 9장을 갖습니다. 짝수(0 포함)는 흑, 홀수는 백입니다.</li>
+    <li>선 플레이어가 한 장을 비공개로 내면 그 색만 공개됩니다.</li>
+    <li>후 플레이어가 색을 보고 한 장을 냅니다. 큰 숫자가 그 라운드를 이깁니다.</li>
+    <li>낸 타일은 다시 쓸 수 없습니다. 이긴 사람이 다음 라운드 선이고, 비기면 선이 그대로입니다.</li>
+  </ol>
+  <h3>흑과 백 2</h3>
+  <ol>
+    <li>각자 99포인트로 시작해 매 라운드 원하는 만큼 겁니다. 건 포인트는 사라집니다.</li>
+    <li>한 자리 수(0~9)는 흑, 두 자리 수(10~99)는 백으로 공개됩니다.</li>
+    <li>남은 포인트는 5칸 표시등으로 보입니다. 80·60·40·20 아래로 내려갈 때마다 한 칸씩 꺼지고, 마지막 칸은 꺼지지 않습니다.</li>
+    <li>더 많이 건 쪽이 이깁니다. 같으면 무승부입니다.</li>
+  </ol>
+  <h3>승리 조건 (공통)</h3>
+  <ol>
+    <li>5승을 먼저 하면 즉시 승리합니다(최대 5승 4패).</li>
+    <li>9라운드가 끝났을 때 승수가 같으면 무승부로 재경기합니다.</li>
+    <li>첫 라운드 선은 동전 던지기로 정합니다.</li>
+  </ol>
+  <button class="primary" id="rulesClose" style="margin-top:14px">닫기</button>
+</div></div>
+
+<script>
+// ================= ENGINE START =================
+const ALL_TILES=[0,1,2,3,4,5,6,7,8];
+const WIN_TARGET=5, MAX_ROUNDS=9;
+const colA=n=>n%2===0?'B':'W';
+const colB=n=>n<10?'B':'W';
+const lightsOf=r=>r>=80?5:r>=60?4:r>=40?3:r>=20?2:1;
+const BAND={5:[80,99],4:[60,79],3:[40,59],2:[20,39],1:[0,19]};
+const rnd=Math.random, pick=a=>a[Math.floor(rnd()*a.length)], clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+function newGame(o){
+  return {ver:o.ver,mode:o.mode,diff:o.diff,memo:o.memo,
+    players:[0,1].map(()=>({tiles:ALL_TILES.slice(),rem:99,score:0})),
+    round:1,first:0,history:[],cur:{plays:[null,null],colors:[null,null]},
+    phase:'idle',actor:null,over:false,result:null};
+}
+function colorOf(G,v){return G.ver==='A'?colA(v):colB(v);}
+function applyPlay(G,p,v){
+  const pl=G.players[p];
+  if(G.cur.plays[p]!==null) throw new Error('already played');
+  if(G.ver==='A'){const i=pl.tiles.indexOf(v); if(i<0) throw new Error('bad tile'); pl.tiles.splice(i,1);}
+  else{ if(!Number.isInteger(v)||v<0||v>pl.rem) throw new Error('bad bet'); pl.rem-=v; }
+  G.cur.plays[p]=v; G.cur.colors[p]=colorOf(G,v);
+}
+function resolveRound(G){
+  const [a,b]=G.cur.plays; const w=a>b?0:b>a?1:-1;
+  if(w>=0) G.players[w].score++;
+  const h={round:G.round,first:G.first,plays:[a,b],colors:G.cur.colors.slice(),winner:w};
+  G.history.push(h);
+  if(w>=0) G.first=w;
+  const s=G.players.map(x=>x.score);
+  if(s[0]>=WIN_TARGET||s[1]>=WIN_TARGET||G.round>=MAX_ROUNDS){G.over=true;G.result=s[0]>s[1]?0:s[1]>s[0]?1:-1;}
+  else G.round++;
+  G.cur={plays:[null,null],colors:[null,null]};
+  return h;
+}
+
+// --- what player p legitimately knows ---
+function roundsView(G,p){
+  return G.history.map(h=>({my:h.plays[p],oc:h.colors[1-p],res:h.winner===-1?0:(h.winner===p?1:-1),first:h.first===p}));
+}
+function pendingColor(G,p){return G.cur.plays[1-p]!==null?G.cur.colors[1-p]:null;}
+
+// 흑과 백: 상대 타일 배치 전수 탐색
+function deduceA(G,p,cap=30000){
+  const rv=roundsView(G,p), pc=pendingColor(G,p);
+  const cands=rv.map(r=>ALL_TILES.filter(t=>colA(t)===r.oc&&(r.res===1?t<r.my:r.res===-1?t>r.my:t===r.my)));
+  if(pc) cands.push(ALL_TILES.filter(t=>colA(t)===pc));
+  const order=cands.map((_,i)=>i).sort((x,y)=>cands[x].length-cands[y].length);
+  const out=[], cur=new Array(cands.length); let used=0;
+  (function bt(k){
+    if(out.length>=cap) return;
+    if(k===order.length){out.push(cur.slice());return;}
+    const i=order[k];
+    for(const t of cands[i]){ if(used&(1<<t)) continue; used|=1<<t; cur[i]=t; bt(k+1); used&=~(1<<t); }
+  })(0);
+  const per=cands.map(()=>new Set()), useCount=new Array(9).fill(0);
+  for(const a of out){ a.forEach((t,i)=>per[i].add(t)); for(const t of a) useCount[t]++; }
+  return {assign:out,rv,hasPending:!!pc,
+    per:per.map(s=>[...s].sort((x,y)=>x-y)),
+    tileState:ALL_TILES.map(t=>out.length===0?'maybe':useCount[t]===out.length?'used':useCount[t]===0?'left':'maybe')};
+}
+
+// 흑과 백 2: 상대 베팅 구간 추정
+function deduceB(G,p){
+  const rv=roundsView(G,p), pc=pendingColor(G,p);
+  const iv=rv.map(r=>{
+    let [l,h]=r.oc==='B'?[0,9]:[10,99];
+    if(r.res===1) h=Math.min(h,r.my-1); else if(r.res===-1) l=Math.max(l,r.my+1); else {l=r.my;h=r.my;}
+    return [l,h];
+  });
+  let lo=0,hi=0; iv.forEach(([l,h])=>{lo+=l;hi+=h;});
+  const bLo=Math.max(0,99-hi), bHi=99-lo;
+  let pend=null;
+  if(pc){ const l=pc==='B'?0:10; const h=Math.min(pc==='B'?9:99,bHi); pend=[l,Math.max(l,h)]; lo+=pend[0]; hi+=pend[1]; }
+  const band=BAND[lightsOf(G.players[1-p].rem)];
+  let rLo=Math.max(0,99-hi,band[0]), rHi=Math.min(99-lo,band[1]);
+  if(rLo>rHi){rLo=band[0];rHi=band[1];}
+  if(pend){
+    const a=Math.max(pend[0],bLo-rHi), b=Math.min(pend[1],bHi-rLo);
+    if(a<=b) pend=[a,b];
+  }
+  return {iv,rv,pend,pendColor:pc,remLo:rLo,remHi:rHi,beforeLo:bLo,beforeHi:bHi};
+}
+
+// --- AI ---
+function aiMove(G,p){return G.ver==='A'?aiA(G,p):aiB(G,p);}
+
+function aiA(G,p){
+  const mine=G.players[p].tiles.slice().sort((a,b)=>a-b), d=G.diff;
+  if(mine.length===1) return mine[0];
+  if(d==='easy') return pick(mine);
+  const D=deduceA(G,p);
+  return mcA(G,p,D,mine,d==='normal'?300:30000);
+}
+const d0=b=>b<1000?20:200;
+function mcA(G,p,D,mine,budget){
+  const N=Math.max(d0(budget),Math.floor(budget/mine.length));
+  let best=mine[0],bv=-1;
+  for(const t of mine){
+    let sum=0;
+    for(let i=0;i<N;i++) sum+=rolloutA(G,p,t,D.assign.length?pick(D.assign):null,D.hasPending);
+    const v=sum/N; if(v>bv+1e-9){bv=v;best=t;}
+  }
+  return best;
+}
+function rolloutA(G,p,t,assign,hasPending){
+  const o=1-p;
+  let myT=G.players[p].tiles.filter(x=>x!==t);
+  let oppT;
+  if(assign){const u=new Set(assign); oppT=ALL_TILES.filter(x=>!u.has(x));}
+  else{ const n=G.players[o].tiles.length+(hasPending?1:0); oppT=ALL_TILES.slice().sort(()=>rnd()-.5).slice(0,n); }
+  let oppNow;
+  if(hasPending&&assign) oppNow=assign[assign.length-1];
+  else{ oppNow=pick(oppT); oppT=oppT.filter(x=>x!==oppNow); }
+  const s=[G.players[0].score,G.players[1].score]; let round=G.round;
+  const step=(a,b)=>{const w=a>b?p:b>a?o:-1; if(w>=0) s[w]++;};
+  step(t,oppNow);
+  while(s[0]<WIN_TARGET&&s[1]<WIN_TARGET&&round<MAX_ROUNDS&&myT.length&&oppT.length){
+    round++;
+    const a=pick(myT), b=pick(oppT);
+    myT=myT.filter(x=>x!==a); oppT=oppT.filter(x=>x!==b); step(a,b);
+  }
+  return s[p]>s[o]?1:s[p]===s[o]?0.5:0;
+}
+
+function aiB(G,p){
+  const me=G.players[p], rem=me.rem, d=G.diff;
+  if(rem===0) return 0;
+  const need=WIN_TARGET-me.score, oppNeed=WIN_TARGET-G.players[1-p].score;
+  const roundsLeft=MAX_ROUNDS-G.round+1;
+  if(d==='easy'){ const avg=rem/Math.max(1,roundsLeft); return clamp(Math.round(avg*(0.3+rnd()*1.5)),0,rem); }
+  const D=deduceB(G,p);
+  const perWin=rem/Math.max(1,need);
+  if(D.pendColor){ // 후공
+    const [lo,hi]=D.pend;
+    if(D.pendColor==='B'){
+      if(rem>hi) return hi+1;
+      return rem;
+    }
+    if(lo>=rem) return clamp(Math.floor(rnd()*3),0,rem); // 이길 수 없음 → 버림
+    if(d==='hard'&&rem>hi&&(need===1||hi+1<=perWin*1.7)) return hi+1;
+    const beforeMid=(D.beforeLo+D.beforeHi)/2;
+    const est=clamp(Math.round(beforeMid/Math.max(1,oppNeed)),lo,hi);
+    const bet=Math.min(rem,est+1+Math.floor(rnd()*(d==='hard'?4:7)));
+    if(bet<=perWin*1.5||need>=roundsLeft) return bet;
+    return clamp(Math.floor(rnd()*3),0,rem);
+  }
+  // 선공
+  if(need>=roundsLeft) return clamp(Math.round(perWin+rnd()*4),0,rem);
+  const bluff=d==='hard'?0.4:0.15;
+  if(roundsLeft>need+1&&rnd()<bluff) return clamp(Math.floor(rnd()*4),0,rem);
+  let bet=Math.round(perWin*(0.6+rnd()*0.8));
+  if(perWin>=12&&bet<10) bet=10+Math.floor(rnd()*4);
+  return clamp(bet,0,rem);
+}
+// ================= ENGINE END =================
+
+// ================= UI =================
+const $=s=>document.querySelector(s);
+let G=null;
+const UI={viewer:0,inputFor:null,sel:null,bet:10,sound:true,lastResult:null,gen:0,newSlot:null};
+let OPTS={ver:'A',opp:'normal',memo:true};
+try{ const s=JSON.parse(localStorage.getItem('bw-opts')||'null'); if(s) OPTS={...OPTS,...s}; const so=localStorage.getItem('bw-sound'); if(so!==null) UI.sound=so==='1'; }catch(e){}
+function saveOpts(){ try{localStorage.setItem('bw-opts',JSON.stringify(OPTS));localStorage.setItem('bw-sound',UI.sound?'1':'0');}catch(e){} }
+
+function later(fn,ms){const g=UI.gen; setTimeout(()=>{if(g===UI.gen) fn();},ms);}
+const isAI=p=>G.mode==='ai'&&p===1;
+const nm=p=>G.mode==='ai'?(p===0?'나':'AI'):`플레이어 ${p+1}`;
+const colName=c=>c==='B'?'흑':'백';
+const concealed=()=>G.mode==='hot'&&UI.inputFor===null;
+
+// ---- sound (WebAudio, 파일 없음) ----
+let AC=null;
+function tone(f,t,d,type='sine',vol=.18){
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type=type; o.frequency.value=f; o.connect(g); g.connect(AC.destination);
+  const s=AC.currentTime+t; g.gain.setValueAtTime(0,s); g.gain.linearRampToValueAtTime(vol,s+.01); g.gain.exponentialRampToValueAtTime(.001,s+d);
+  o.start(s); o.stop(s+d+.02);
+}
+function sfx(k){
+  if(!UI.sound) return;
+  try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){return;}
+  if(k==='tap') tone(880,0,.05,'triangle',.08);
+  if(k==='flip'){tone(320,0,.07,'square',.06);tone(520,.05,.09,'triangle',.1);}
+  if(k==='win'){[523,659,784,1047].forEach((f,i)=>tone(f,i*.09,.22,'triangle',.16));}
+  if(k==='lose'){[392,330,262].forEach((f,i)=>tone(f,i*.12,.25,'sine',.15));}
+  if(k==='tie'){tone(440,0,.18,'sine',.12);tone(440,.2,.18,'sine',.12);}
+  if(k==='toss'){for(let i=0;i<6;i++) tone(700+i*60,i*.08,.06,'triangle',.07);}
+  if(k==='end'){[523,659,784,659,1047].forEach((f,i)=>tone(f,i*.12,.3,'triangle',.16));}
+}
+
+// ---- menu ----
+function renderMenu(){
+  document.querySelectorAll('[data-group]').forEach(gp=>{
+    const key=gp.dataset.group;
+    gp.querySelectorAll('.opt').forEach(b=>b.classList.toggle('on',b.dataset.v===OPTS[key]));
+  });
+  $('#optMemo').checked=OPTS.memo;
+}
+document.querySelectorAll('[data-group]').forEach(gp=>gp.addEventListener('click',e=>{
+  const b=e.target.closest('.opt'); if(!b) return; OPTS[gp.dataset.group]=b.dataset.v; saveOpts(); renderMenu(); sfx('tap');
+}));
+$('#optMemo').addEventListener('change',e=>{OPTS.memo=e.target.checked;saveOpts();});
+$('#btnStart').addEventListener('click',startGame);
+$('#btnSound').addEventListener('click',()=>{UI.sound=!UI.sound;saveOpts();$('#btnSound').textContent=UI.sound?'소리 켬':'소리 끔';sfx('tap');});
+$('#btnSound').textContent=UI.sound?'소리 켬':'소리 끔';
+$('#btnRules').addEventListener('click',()=>{$('#rulesOv').hidden=false;});
+$('#rulesClose').addEventListener('click',()=>{$('#rulesOv').hidden=true;});
+$('#btnMenu').addEventListener('click',()=>{
+  const b=$('#btnMenu');
+  if(G&&!G.over&&!b.dataset.armed){ b.dataset.armed='1'; b.textContent='나갈까요?'; b.style.borderColor='var(--accent)'; b.style.color='var(--accent)';
+    setTimeout(()=>{delete b.dataset.armed;b.textContent='메뉴';b.style.borderColor='';b.style.color='';},2500); return; }
+  delete b.dataset.armed; b.textContent='메뉴'; b.style.borderColor=''; b.style.color=''; toMenu(); });
+$('#finalMenu').addEventListener('click',toMenu);
+$('#finalAgain').addEventListener('click',()=>{$('#finalOv').hidden=true;startGame();});
+$('#passGo').addEventListener('click',()=>{ $('#passOv').hidden=true; const f=UI.passCb; UI.passCb=null; f&&f(); });
+
+function toMenu(){UI.gen++;G=null;$('#finalOv').hidden=true;$('#passOv').hidden=true;$('#game').hidden=true;$('#menu').hidden=false;$('#btnMenu').hidden=true;renderMenu();}
+
+// ---- game flow ----
+function startGame(){
+  UI.gen++;
+  G=newGame({ver:OPTS.ver,mode:OPTS.opp==='hot'?'hot':'ai',diff:OPTS.opp,memo:OPTS.memo});
+  G.first=rnd()<.5?0:1;
+  Object.assign(UI,{viewer:0,inputFor:null,sel:null,lastResult:null,newSlot:null});
+  G.phase='toss';
+  $('#menu').hidden=true;$('#game').hidden=false;$('#btnMenu').hidden=false;$('#finalOv').hidden=true;
+  render(); sfx('toss');
+  later(startRound,1500);
+}
+function startRound(){UI.lastResult=null;UI.newSlot=null;G.phase='first';askMove(G.first);}
+function askMove(p){
+  G.actor=p; UI.sel=null; UI.bet=Math.min(G.players[p].rem,10);
+  if(isAI(p)){UI.inputFor=null;render();later(()=>doPlay(p,aiMove(G,p)),700+rnd()*700);return;}
+  if(G.mode==='hot'){
+    UI.inputFor=null;render();
+    showPass(p,()=>{UI.viewer=p;UI.inputFor=p;render();});
+    return;
+  }
+  UI.inputFor=p;render();
+}
+function showPass(p,cb){
+  $('#passName').textContent=`${nm(p)} 차례`;
+  let info='';
+  if(G.phase==='first') info=`이번 라운드 선입니다.`;
+  else info=`상대가 <b>${colName(G.cur.colors[1-p])}</b>을 냈습니다.`;
+  $('#passInfo').innerHTML=info;
+  UI.passCb=cb; $('#passOv').hidden=false;
+}
+function doPlay(p,v){
+  if(!G||G.over||G.cur.plays[p]!==null) return;
+  applyPlay(G,p,v);
+  UI.inputFor=null; UI.newSlot=p; sfx('flip');
+  if(G.phase==='first'){G.phase='second';render();later(()=>askMove(1-p),650);}
+  else{
+    G.phase='reveal';render();
+    later(()=>{
+      const h=resolveRound(G); UI.lastResult=h; UI.newSlot=null;
+      G.phase=G.over?'end':'result'; render();
+      if(G.mode==='hot') sfx(h.winner===-1?'tie':'win');
+      else sfx(h.winner===-1?'tie':h.winner===0?'win':'lose');
+      if(G.over) later(showFinal,1500);
+    },800);
+  }
+}
+
+// ---- render ----
+function tileHTML(v,c,{back=false,size='',extra=''}={}){
+  return `<div class="tile ${c} ${back?'back':''} ${size} ${extra}">${back?'?':v}</div>`;
+}
+function lightsHTML(n){return `<div class="lights" aria-label="표시등 ${n}칸">${[1,2,3,4,5].map(i=>`<i class="${i<=n?'on':''}"></i>`).join('')}</div>`;}
+
+function statusHTML(){
+  const v=UI.viewer,o=1-v;
+  if(G.phase==='toss') return `동전 던지기… <span class="hl">${nm(G.first)}</span> 선!`;
+  if(G.phase==='first'){
+    if(isAI(G.actor)) return 'AI가 고르는 중…';
+    if(UI.inputFor===null) return `${nm(G.actor)} 차례`;
+    return G.ver==='A'?'선입니다. 낼 타일을 고르세요':'선입니다. 걸 포인트를 정하세요';
+  }
+  if(G.phase==='second'){
+    const fp=1-G.actor, c=G.cur.colors[fp];
+    if(isAI(G.actor)) return `${nm(fp)}: ${colName(c)} · AI가 고르는 중…`;
+    if(UI.inputFor===null) return `${nm(G.actor)} 차례`;
+    return `상대가 <span class="hl">${colName(c)}</span>을 냈습니다. 대응하세요`;
+  }
+  if(G.phase==='reveal') return '판정 중…';
+  if(G.phase==='result'||G.phase==='end'){
+    const h=UI.lastResult;
+    if(h.winner===-1) return '무승부 · 같은 수를 냈습니다';
+    if(G.mode==='hot') return `<span class="hl">${nm(h.winner)}</span> 승리`;
+    return h.winner===0?'<span class="hl">이번 라운드 승리!</span>':'이번 라운드 패배';
+  }
+  return '';
+}
+
+function render(){
+  if(!G) return;
+  const v=UI.viewer,o=1-v,P=G.players,hide=concealed();
+  const showingRes=G.phase==='result'||G.phase==='end';
+  const rd=showingRes?UI.lastResult.round:G.round;
+  $('#roundLbl').textContent=`${rd} / ${MAX_ROUNDS} 라운드`;
+  $('#scoreLbl').innerHTML=`${nm(0)} <b>${P[0].score}</b> : <b>${P[1].score}</b> ${nm(1)}`;
+  $('#oppName').textContent=nm(o); $('#meName').textContent=nm(v);
+  const firstNow=showingRes?UI.lastResult.first:G.first;
+  const showFirst=G.phase!=='toss';
+  $('#oppFirst').hidden=!(showFirst&&firstNow===o); $('#meFirst').hidden=!(showFirst&&firstNow===v);
+
+  // opponent info
+  if(G.ver==='A'){
+    const ts=P[o].tiles.map(colA).sort();
+    $('#oppInfo').innerHTML=ts.map(c=>tileHTML('',c,{back:true,size:'sm'})).join('')+
+      `<span class="muted" style="margin-left:6px">흑 ${ts.filter(c=>c==='B').length} · 백 ${ts.filter(c=>c==='W').length}</span>`;
+  }else{
+    $('#oppInfo').innerHTML=lightsHTML(lightsOf(P[o].rem))+`<span class="muted" style="margin-left:6px">남은 포인트 표시등</span>`;
+  }
+  $('#meExtra').textContent=(G.ver==='B'&&!hide)?`남은 ${P[v].rem}P`:'';
+
+  // slots
+  const plays=showingRes?UI.lastResult.plays:G.cur.plays;
+  const cols=showingRes?UI.lastResult.colors:G.cur.colors;
+  const winner=showingRes?UI.lastResult.winner:null;
+  const slot=(p)=>{
+    if(plays[p]===null) return `<div class="tile lg empty"></div>`;
+    const mineVisible=p===v&&!hide;
+    const ex=(UI.newSlot===p?'pop ':'')+(winner===p?'win':'');
+    return tileHTML(plays[p],cols[p],{back:!mineVisible,size:'lg',extra:ex});
+  };
+  $('#slotOpp').innerHTML=slot(o); $('#slotMe').innerHTML=slot(v);
+  $('#oppSlotLbl').textContent=nm(o); $('#meSlotLbl').textContent=nm(v);
+  $('#status').innerHTML=`<span>${statusHTML()}</span>`;
+  const bn=$('#banner');
+  if(showingRes){
+    const w=UI.lastResult.winner; bn.hidden=false;
+    bn.className='banner '+(w===-1?'tie':(G.mode==='ai'&&w===1?'':'win'));
+    bn.textContent=w===-1?'무승부':`${nm(w)} 승`;
+  }else bn.hidden=true;
+
+  renderControls(); renderStrip(); renderMemo();
+  UI.newSlot=null;
+}
+
+function renderControls(){
+  const v=UI.viewer,P=G.players,hide=concealed(),el=$('#controls');
+  const myInput=UI.inputFor===v;
+  let html='';
+  if(G.ver==='A'){
+    if(hide){
+      html=`<div class="hand locked">${ALL_TILES.map(()=>`<button disabled>${tileHTML('','B',{back:true})}</button>`).join('')}</div>`;
+    }else{
+      html=`<div class="hand ${myInput?'':'locked'}">${ALL_TILES.map(t=>{
+        const has=P[v].tiles.includes(t);
+        return `<button data-tile="${t}" ${has&&myInput?'':'disabled'} class="${has?'':'gone'} ${myInput&&UI.sel===t?'sel':''}" aria-label="${t}번 타일">${tileHTML(t,colA(t))}</button>`;
+      }).join('')}</div>`;
+      if(myInput) html+=`<button class="primary act" data-act="submit" ${UI.sel===null?'disabled':''}>${UI.sel===null?'타일을 고르세요':`${UI.sel} 내기 (${colName(colA(UI.sel))}으로 공개)`}</button>`;
+    }
+  }else if(myInput){
+    const rem=P[v].rem, b=clamp(UI.bet,0,rem); UI.bet=b;
+    html=`<div class="bet">
+        <button data-d="-10">-10</button><button data-d="-1">-1</button>
+        ${tileHTML(b,colB(b),{size:'betnum',extra:'' })}
+        <button data-d="1">+1</button><button data-d="10">+10</button></div>
+      <div class="bet2"><button data-set="0">0</button><button data-set="10">10</button><button data-set="${rem}">전부 (${rem})</button></div>
+      <input type="range" min="0" max="${rem}" value="${b}" id="betRange" aria-label="걸 포인트">
+      <div class="hint" id="betHint"></div>
+      <button class="primary act" data-act="submit">${b}P 걸기</button>`;
+  }
+  if(G.phase==='result') html+=`<button class="primary act" data-act="next">다음 라운드</button>`;
+  if(G.phase==='end') html+=`<button class="primary act" data-act="final">최종 결과 보기</button>`;
+  if(!html) html=`<div class="muted" style="padding:6px 0">${G.ver==='B'&&hide?'포인트는 차례가 오면 보입니다':'기다리는 중…'}</div>`;
+  el.innerHTML=html;
+  if(G.ver==='B'&&myInput) updateBetUI();
+}
+function updateBetUI(){
+  const rem=G.players[UI.viewer].rem,b=UI.bet;
+  const t=$('#controls .betnum'); if(!t) return;
+  t.textContent=b; t.className='tile betnum '+colB(b);
+  $('#betRange').value=b;
+  const after=rem-b, l0=lightsOf(rem), l1=lightsOf(after);
+  $('#betHint').innerHTML=`<b>${colName(colB(b))}</b>으로 공개 · 남는 포인트 ${after}`+(l1<l0?` · <span style="color:var(--accent)">표시등 ${l0-l1}칸 꺼짐</span>`:'');
+  $('#controls [data-act=submit]').textContent=`${b}P 걸기`;
+}
+$('#controls').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b||b.disabled) return;
+  const v=UI.viewer;
+  if(b.dataset.tile!==undefined){
+    const t=+b.dataset.tile;
+    if(UI.sel===t){doPlay(v,t);return;}
+    UI.sel=t; sfx('tap'); renderControls(); return;
+  }
+  if(b.dataset.d){UI.bet=clamp(UI.bet+ +b.dataset.d,0,G.players[v].rem);sfx('tap');updateBetUI();return;}
+  if(b.dataset.set!==undefined){UI.bet=clamp(+b.dataset.set,0,G.players[v].rem);sfx('tap');updateBetUI();return;}
+  const a=b.dataset.act;
+  if(a==='submit'){ if(G.ver==='A'){ if(UI.sel!==null) doPlay(v,UI.sel);} else doPlay(v,UI.bet); }
+  if(a==='next') startRound();
+  if(a==='final') showFinal();
+});
+$('#controls').addEventListener('input',e=>{ if(e.target.id==='betRange'){UI.bet=+e.target.value;updateBetUI();} });
+
+function renderStrip(){
+  const v=UI.viewer;
+  let html='';
+  for(let i=0;i<MAX_ROUNDS;i++){
+    const h=G.history[i];
+    if(!h){ const now=!G.over&&i===G.round-1&&G.phase!=='toss'&&G.phase!=='result'; html+=`<div class="cell ${now?'now':''}">R${i+1}</div>`; continue; }
+    const rel=h.winner===-1?'':(G.mode==='hot'?'w':(h.winner===v?'w':'l'));
+    const lbl=h.winner===-1?'무':(G.mode==='hot'?`P${h.winner+1}`:(h.winner===v?'승':'패'));
+    html+=`<div class="cell ${rel}" title="${i+1}라운드"><div class="dots"><i class="${h.colors[v]}"></i><i class="${h.colors[1-v]}"></i></div>${lbl}</div>`;
+  }
+  $('#strip').innerHTML=html;
+}
+
+function renderMemo(){
+  const box=$('#memoBox');
+  const v=UI.viewer;
+  if(!G.memo||concealed()||isAI(v)||G.phase==='toss'){box.hidden=true;return;}
+  box.hidden=false;
+  const o=1-v;
+  if(G.ver==='A'){
+    const D=deduceA(G,v);
+    let rows=D.rv.map((r,i)=>`<tr><td>${i+1}</td><td>${r.first?'나':'상대'}</td><td>${tileHTML(r.my,colA(r.my),{size:'sm'})}</td><td>${tileHTML('',r.oc,{back:true,size:'sm'})}</td><td>${r.res===1?'승':r.res===-1?'패':'무'}</td><td class="poss">${D.per[i].join(' ')||'-'}</td></tr>`).join('');
+    if(D.hasPending) rows+=`<tr><td>${G.round}</td><td>상대</td><td>-</td><td>${tileHTML('',pendingColor(G,v),{back:true,size:'sm'})}</td><td>…</td><td class="poss">${D.per[D.per.length-1].join(' ')}</td></tr>`;
+    const grid=ALL_TILES.map(t=>`<div class="g ${D.tileState[t]}">${tileHTML(t,colA(t))}</div>`).join('');
+    $('#memo').innerHTML=(rows?`<table class="mt"><tr><th>R</th><th>선</th><th>나</th><th>상대 색</th><th>결과</th><th>상대가 냈을 수</th></tr>${rows}</table>`:`<div class="muted" style="margin-top:6px">라운드가 진행되면 상대가 냈을 수 있는 숫자를 좁혀 줍니다.</div>`)+
+      `<div style="margin-top:12px;font-weight:700;font-size:14px">${nm(o)}의 남은 타일 추리</div><div class="grid9">${grid}</div>
+       <div class="legend">초록 테두리: 아직 갖고 있는 게 확실 · 흐림: 이미 쓴 게 확실 · 보통: 둘 다 가능</div>`;
+  }else{
+    const D=deduceB(G,v);
+    let rows=D.rv.map((r,i)=>`<tr><td>${i+1}</td><td>${r.first?'나':'상대'}</td><td>${r.my}</td><td>${tileHTML('',r.oc,{back:true,size:'sm'})}</td><td>${r.res===1?'승':r.res===-1?'패':'무'}</td><td class="poss">${D.iv[i][0]===D.iv[i][1]?D.iv[i][0]:`${D.iv[i][0]}~${D.iv[i][1]}`}</td></tr>`).join('');
+    if(D.pendColor) rows+=`<tr><td>${G.round}</td><td>상대</td><td>-</td><td>${tileHTML('',D.pendColor,{back:true,size:'sm'})}</td><td>…</td><td class="poss">${D.pend[0]}~${D.pend[1]}</td></tr>`;
+    $('#memo').innerHTML=(rows?`<table class="mt"><tr><th>R</th><th>선</th><th>나</th><th>상대 색</th><th>결과</th><th>상대 베팅</th></tr>${rows}</table>`:`<div class="muted" style="margin-top:6px">라운드가 진행되면 상대 베팅 범위를 좁혀 줍니다.</div>`)+
+      `<div style="margin-top:10px;font-size:14px">${nm(o)} 남은 포인트 추정: <b>${D.remLo===D.remHi?D.remLo:`${D.remLo} ~ ${D.remHi}`}</b></div>
+       <div class="legend">색, 승패, 표시등만으로 계산한 범위입니다.</div>`;
+  }
+}
+
+function showFinal(){
+  if(!G) return;
+  sfx('end');
+  const r=G.result, s=G.players.map(p=>p.score);
+  let title;
+  if(r===-1) title='무승부 · 재경기!';
+  else if(G.mode==='hot') title=`${nm(r)} 승리!`;
+  else title=r===0?'승리!':'패배';
+  $('#finalTitle').textContent=title;
+  $('#finalScore').textContent=`${nm(0)} ${s[0]} : ${s[1]} ${nm(1)}`;
+  const chip=(v,c)=>tileHTML(v,c,{size:'sm'});
+  $('#finalTable').innerHTML=`<tr><th>R</th><th>선</th><th>${nm(0)}</th><th>${nm(1)}</th><th>승자</th></tr>`+
+    G.history.map(h=>`<tr><td>${h.round}</td><td>${nm(h.first)}</td><td>${chip(h.plays[0],h.colors[0])}</td><td>${chip(h.plays[1],h.colors[1])}</td><td>${h.winner===-1?'무':nm(h.winner)}</td></tr>`).join('');
+  $('#finalAgain').textContent=r===-1?'재경기':'한 판 더';
+  $('#finalOv').hidden=false;
+}
+
+renderMenu();
+</script>
+</body>
+</html>
