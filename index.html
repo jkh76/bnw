@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>흑과 백</title>
-<meta name="theme-color" content="#0b1020">
+<meta name="theme-color" content="#1a2238">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:title" content="흑과 백">
@@ -23,10 +23,10 @@
     color-scheme:light;
   }
   [data-theme=dark]{
-    --bg:#0b1020; --bg-glow:#1b2542; --card:#151c2e; --card2:#1a2236; --ink:#eef1f8; --muted:#8f9ab3; --line:#28324b;
-    --btn:#1b2338; --shadow:0 10px 28px rgba(0,0,0,.45); --pattern:none;
+    --bg:#1a2238; --bg-glow:#2c3759; --card:#232c45; --card2:#29334d; --ink:#eef1f8; --muted:#9aa5bd; --line:#38446a;
+    --btn:#2a344f; --shadow:0 10px 28px rgba(0,0,0,.45); --pattern:none;
     --accent:#ff3347; --accent2:#ff6170; --accent-soft:rgba(255,51,71,.16); --accent-glow:rgba(255,51,71,.5);
-    --lose:#7f8fb8; --tie:#f0b232; --good:#34c77b; --mark:#ff8c2e; --seg-off:#2a3350;
+    --lose:#7f8fb8; --tie:#f0b232; --good:#34c77b; --mark:#ff8c2e; --seg-off:#38436a;
     --go-1:#b9ecc9; --go-2:#8fd8aa; --go-ink:#06291a; --go-edge:#7cc99a; --go-glow:rgba(120,220,160,.22);
     --felt-1:#27304b; --felt-2:#0e1320;
     color-scheme:dark;
@@ -337,7 +337,7 @@
     <details class="memo" id="memoBox" open><summary>추리 메모</summary><div id="memo"></div></details>
    </aside>
   </section>
-  <footer class="ver" id="verLbl">v1.0 · 2026-11-17</footer>
+  <footer class="ver" id="verLbl">v1.1 · 2026-11-18</footer>
 </div>
 
 <canvas id="fx" aria-hidden="true"></canvas>
@@ -650,7 +650,7 @@ $('#btnStart').addEventListener('click',startGame);
 $('#btnSound').addEventListener('click',()=>{UI.sound=!UI.sound;saveOpts();$('#btnSound').textContent=UI.sound?'소리 켬':'소리 끔';sfx('tap');});
 $('#btnSound').textContent=UI.sound?'소리 켬':'소리 끔';
 function applyTheme(t){document.documentElement.dataset.theme=t;$('#btnTheme').textContent=t==='dark'?'라이트':'다크';
-  const m=document.querySelector('meta[name=theme-color]'); if(m) m.content=t==='dark'?'#0b1020':'#e9e5da';}
+  const m=document.querySelector('meta[name=theme-color]'); if(m) m.content=t==='dark'?'#1a2238':'#e9e5da';}
 applyTheme(document.documentElement.dataset.theme||'light');
 $('#btnTheme').addEventListener('click',()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';applyTheme(t);try{localStorage.setItem('bw-theme',t);}catch(e){}sfx('tap');});
 $('#btnRules').addEventListener('click',()=>{$('#rulesOv').hidden=false;});
